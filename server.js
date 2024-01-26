@@ -19,6 +19,12 @@ for (let i = 1; i <= 6; i++) {
     });
 }
 
+// Маршрут для получения данных из текстовых полей
+app.post('/submit-text', (req, res) => {
+    console.log('Полученные тексты:', req.body.inputs); // Здесь вы можете обработать данные
+    res.json({ status: 'success', message: 'Тексты получены' });
+});
+
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
 });
