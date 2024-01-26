@@ -12,15 +12,12 @@ app.use(cors()); // Это позволяет запросы со всех ис�
 app.use(express.json());
 app.use(express.static('public')); // Статическая папка для хранения изображений
 
-// Маршрут для получения первого изображения
-app.get('/get-image1', (req, res) => {
-    res.sendFile(path.join(__dirname, '/public/example1.jpg'));
-});
-
-// Маршрут для получения второго изображения
-app.get('/get-image2', (req, res) => {
-    res.sendFile(path.join(__dirname, '/public/example2.jpg'));
-});
+// Создаем маршруты для каждого изображения
+for (let i = 1; i <= 6; i++) {
+    app.get(`/get-image${i}`, (req, res) => {
+        res.sendFile(path.join(__dirname, `/public/picture${i}.png`));
+    });
+}
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
