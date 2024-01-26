@@ -11,6 +11,7 @@ app.use(express.static('public')); // Статическая папка для �
 
 
 
+
 // Создаем маршруты для каждого изображения
 for (let i = 1; i <= 6; i++) {
     app.get(`/get-image${i}`, (req, res) => {
@@ -51,6 +52,40 @@ app.get('/get-data', (req, res) => {
     pythonProcess.stderr.on('data', (data) => {
         console.error(`stderr: ${data}`);
         res.status(500).send(data.toString());
+    });
+});
+
+// Маршрут для вызова Python скрипта
+app.get('/get-signature-data', (req, res) => {
+    process.chdir(path.join(__dirname, '../nadezhdinSigns/'));
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+
+    // Запуск Python скрипта (замените 'python' на 'python3' в зависимости от вашего окружения)
+    const pythonProcess = spawn('./venv/Scripts/python.exe', ['../nadezhdinSigns/signature_request.py']); // Укажите здесь путь к вашему Python-скрипту
+
+    let dataString = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+        dataString += data.toString();
+    });
+
+    pythonProcess.stdout.on('end', () => {
+        console.log(dataString); // Это выведет в консоль всю строку, которая была собрана из stdout Python-скрипта
+
+        // Попытка разобрать JSON-ответ
+        try {
+            const data = JSON.parse(dataString);
+            res.json(data);
+        } catch (e) {
+            console.error('Ошибка при разборе JSON:', e);
+            res.status(500).send('Ошибка на сервере');
+        }
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+        console.error(`Ошибка: ${data}`);
     });
 });
 
