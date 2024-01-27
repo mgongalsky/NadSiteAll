@@ -29,7 +29,14 @@ const createTableText = `
         birth_year TEXT,
         address TEXT,
         passport_number TEXT,
-        signature_date TEXT
+        signature_date TEXT,
+        fullname_unclear BOOLEAN DEFAULT FALSE,
+        birth_year_unclear BOOLEAN DEFAULT FALSE,
+        address_unclear BOOLEAN DEFAULT FALSE,
+        passport_number_unclear BOOLEAN DEFAULT FALSE,
+        signature_date_unclear BOOLEAN DEFAULT FALSE,
+        comment TEXT,
+        cancelled BOOLEAN DEFAULT FALSE
     );
 `;
 
@@ -116,7 +123,79 @@ app.get('/get-signature-data', (req, res) => {
 });
 
 
+app.post('/update-signature', async (req, res) => {
+    console.log('Полученный JSON:', req.body); // Выводим в консоль входящий JSON
+
+    const {
+        id,
+        fullname,
+        birth_year,
+        address,
+        passport_number,
+        signature_date,
+        errors,
+        comment,
+        cancelled
+    } = req.body;
+
+    try {
+        // Подключение к базе данных
+        const client = new pg.Client(dbConfig);
+        await client.connect();
+
+        // Добавляем данные об ошибках в массив queryValues
+        const queryValues = [
+            id,
+            fullname,
+            birth_year,
+            address,
+            passport_number,
+            signature_date,
+            errors[0], // fullname_unclear
+            errors[1], // birth_year_unclear
+            errors[2], // address_unclear
+            errors[3], // passport_number_unclear
+            errors[4], // signature_date_unclear
+            comment,
+            cancelled
+        ];
+
+        // Обновляем текст SQL-запроса
+        const insertQueryText = `
+            INSERT INTO signatures_processed (
+                id, 
+                fullname, 
+                birth_year, 
+                address, 
+                passport_number, 
+                signature_date, 
+                fullname_unclear, 
+                birth_year_unclear, 
+                address_unclear, 
+                passport_number_unclear, 
+                signature_date_unclear, 
+                comment,
+                cancelled
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ON CONFLICT (id) DO NOTHING;
+        `;
+
+        // Выполнение запроса
+        await client.query(insertQueryText, queryValues);
+
+        // Закрытие соединения с базой данных
+        await client.end();
+
+        res.json({ status: 'success', message: 'Данные успешно добавлены' });
+    } catch (err) {
+        console.error('Ошибка при добавлении данных:', err);
+        res.status(500).json({ status: 'error', message: 'Ошибка на сервере' });
+    }
+});
+
+
 // В вашем server.js
+/*
 app.post('/update-signature', async (req, res) => {
     console.log('Полученный JSON:', req.body); // Выводим в консоль входящий JSON
 
@@ -147,6 +226,8 @@ app.post('/update-signature', async (req, res) => {
         res.status(500).json({ status: 'error', message: 'Ошибка на сервере' });
     }
 });
+
+ */
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
