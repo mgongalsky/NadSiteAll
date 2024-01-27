@@ -183,6 +183,16 @@ app.post('/update-signature', async (req, res) => {
         // Выполнение запроса
         await client.query(insertQueryText, queryValues);
 
+        // Разблокировка записи в таблице signatures_raw
+        //const unlockQueryText = "UPDATE signatures_raw SET reserved=FALSE WHERE id=$1;";
+        //await client.query(unlockQueryText, [id]);
+
+
+        // Разблокировка записи в таблице signatures_raw и установка флага humanized в TRUE
+        const unlockQueryText = "UPDATE signatures_raw SET reserved=FALSE, humanized=TRUE WHERE id=$1;";
+        await client.query(unlockQueryText, [id]);
+
+
         // Закрытие соединения с базой данных
         await client.end();
 
